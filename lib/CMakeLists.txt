@@ -62,6 +62,7 @@ write_basic_package_version_file(
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.cmake.in" "${NGHTTP2_PROJECT_CONFIG}" @ONLY)
 
 # Install cmake config files
+if(NOT DISABLE_INSTALL)
 install(
   FILES "${NGHTTP2_PROJECT_CONFIG}" "${NGHTTP2_VERSION_CONFIG}"
   DESTINATION "${NGHTTP2_CONFIG_INSTALL_DIR}")
@@ -70,6 +71,7 @@ install(
   EXPORT "${NGHTTP2_TARGETS_EXPORT_NAME}"
   NAMESPACE "${NGHTTP2_NAMESPACE}"
   DESTINATION "${NGHTTP2_CONFIG_INSTALL_DIR}")
+endif()
 
 # Public shared library
 if(BUILD_SHARED_LIBS)
@@ -87,12 +89,14 @@ if(BUILD_SHARED_LIBS)
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   )
 
+  if(NOT DISABLE_INSTALL)
   install(TARGETS ${SHARED_LIB}
     EXPORT ${NGHTTP2_TARGETS_EXPORT_NAME}
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
   list(APPEND nghttp2_exports ${SHARED_LIB})
+  endif()
 endif()
 
 # Static library (for unittests because of symbol visibility)
@@ -113,10 +117,12 @@ if(BUILD_STATIC_LIBS)
 
   target_compile_definitions(${STATIC_LIB} PUBLIC "-DNGHTTP2_STATICLIB")
 
+  if(NOT DISABLE_INSTALL)
   install(TARGETS ${STATIC_LIB}
     EXPORT ${NGHTTP2_TARGETS_EXPORT_NAME}
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
   list(APPEND nghttp2_exports ${STATIC_LIB})
+  endif()
 endif()
 
 if(BUILD_SHARED_LIBS)
@@ -127,5 +133,7 @@ endif()
 
 add_library(nghttp2 ALIAS ${LIB_SELECTED})
 
+if(NOT DISABLE_INSTALL)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libnghttp2.pc"
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+endif()
