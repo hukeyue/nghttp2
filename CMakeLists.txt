@@ -176,9 +176,6 @@ endif()
 # XXX shouldn't ${CMAKE_DL_LIBS} be appended to OPENSSL_LIBRARIES instead of
 # APP_LIBRARIES if it is really specific to OpenSSL?
 
-enable_testing()
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
-
 # openssl (for src)
 include(CheckSymbolExists)
 set(HAVE_OPENSSL    ${OPENSSL_FOUND})
