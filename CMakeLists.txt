@@ -54,9 +54,6 @@ endif()
 include(GNUInstallDirs)
 include(CMakeDependentOption)
 
-# For documentation
-find_package(Python3 COMPONENTS Interpreter)
-
 # Auto-detection of features that can be toggled
 if(NOT ENABLE_LIB_ONLY)
   enable_language(CXX)
@@ -67,35 +64,22 @@ if(NOT ENABLE_LIB_ONLY)
   find_package(Libbrotlidec 1.0.9)
 endif()
 
-if(WITH_WOLFSSL)
-  find_package(WolfSSL 5.7.0)
-else()
-  find_package(OpenSSL 1.1.1)
+if (ENABLE_HPACK_TOOLS)
+  find_package(Systemd 209)
+  find_package(Jansson  2.5)
 endif()
-find_package(Libngtcp2 1.15.0)
-find_package(Libnghttp3 1.11.0)
-if(WITH_LIBBPF)
-  find_package(Libbpf 0.7.0)
-  if(NOT LIBBPF_FOUND)
-    message(FATAL_ERROR "libbpf was requested (WITH_LIBBPF=1) but not found.")
-  endif()
-endif()
-if((OPENSSL_FOUND OR WOLFSSL_FOUND) AND LIBEV_FOUND AND ZLIB_FOUND)
-  set(ENABLE_APP_DEFAULT ON)
-else()
-  set(ENABLE_APP_DEFAULT OFF)
-endif()
-find_package(Systemd 209)
-find_package(Jansson  2.5)
-set(ENABLE_HPACK_TOOLS_DEFAULT ${JANSSON_FOUND})
-# 2.0.8 is required because we use evconnlistener_set_error_cb()
-find_package(Libevent 2.0.8 COMPONENTS core extra openssl)
-set(ENABLE_EXAMPLES_DEFAULT ${LIBEVENT_OPENSSL_FOUND})
 
-find_package(LibXml2 2.6.26)
-set(WITH_LIBXML2_DEFAULT    ${LIBXML2_FOUND})
-find_package(Jemalloc)
-set(WITH_JEMALLOC_DEFAULT   ${JEMALLOC_FOUND})
+if (ENABLE_EXAMPLES)
+  # 2.0.8 is required because we use evconnlistener_set_error_cb()
+  find_package(Libevent 2.0.8 COMPONENTS core extra openssl)
+endif()
+
+if (WITH_LIBXML2)
+  find_package(LibXml2 2.6.26)
+endif()
+if (WITH_JEMALLOC)
+  find_package(Jemalloc)
+endif()
 
 include(CMakeOptions.txt)
 
@@ -109,6 +93,27 @@ if(ENABLE_LIB_ONLY)
   set(ENABLE_APP            OFF)
   set(ENABLE_HPACK_TOOLS    OFF)
   set(ENABLE_EXAMPLES       OFF)
+endif()
+
+if(ENABLE_DOC)
+  # For documentation
+  find_package(Python3 COMPONENTS Interpreter)
+endif()
+
+if (ENABLE_APP)
+  if(WITH_WOLFSSL)
+    find_package(WolfSSL 5.7.0)
+  else()
+    find_package(OpenSSL 1.1.1)
+  endif()
+  find_package(Libngtcp2 1.15.0)
+  find_package(Libnghttp3 1.11.0)
+  if(WITH_LIBBPF)
+    find_package(Libbpf 0.7.0)
+    if(NOT LIBBPF_FOUND)
+      message(FATAL_ERROR "libbpf was requested (WITH_LIBBPF=1) but not found.")
+    endif()
+  endif()
 endif()
 
 # Do not disable assertions based on CMAKE_BUILD_TYPE.
@@ -490,73 +495,30 @@ endif()
 
 add_subdirectory(lib)
 #add_subdirectory(lib/includes)
-add_subdirectory(third-party)
-add_subdirectory(src)
-add_subdirectory(examples)
+if (ENABLE_THIRD_PARTY)
+  add_subdirectory(third-party)
+endif()
+if (ENABLE_APP)
+  add_subdirectory(src)
+endif()
+if (ENABLE_EXAMPLES)
+  add_subdirectory(examples)
+endif()
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
   add_subdirectory(tests)
   #add_subdirectory(tests/testdata)
   add_subdirectory(integration-tests)
 endif()
 if(ENABLE_DOC)
+  # For documentation
+  find_package(Python3 COMPONENTS Interpreter)
   add_subdirectory(doc)
 endif()
 add_subdirectory(contrib)
-add_subdirectory(bpf)
+if (WITH_LIBBPF)
+  add_subdirectory(bpf)
+endif()
 
-
-string(TOUPPER "${CMAKE_BUILD_TYPE}" _build_type)
-message(STATUS "summary of build options:
-
-    Package version: ${VERSION}
-    Library version: ${LT_CURRENT}:${LT_REVISION}:${LT_AGE}
-    Install prefix:  ${CMAKE_INSTALL_PREFIX}
-    Target system:   ${CMAKE_SYSTEM_NAME}
-    Compiler:
-      Build type:     ${CMAKE_BUILD_TYPE}
-      C compiler:     ${CMAKE_C_COMPILER}
-      CFLAGS:         ${CMAKE_C_FLAGS_${_build_type}} ${CMAKE_C_FLAGS}
-      C++ compiler:   ${CMAKE_CXX_COMPILER}
-      CXXFLAGS:       ${CMAKE_CXX_FLAGS_${_build_type}} ${CMAKE_CXX_FLAGS}
-      WARNCFLAGS:     ${WARNCFLAGS}
-      CXX1XCXXFLAGS:  ${CXX1XCXXFLAGS}
-      WARNCXXFLAGS:   ${WARNCXXFLAGS}
-    Python:
-      Python:          ${Python3_EXECUTABLE}
-      Python3_VERSION: ${Python3_VERSION}
-    Test:
-      Failmalloc:     ${ENABLE_FAILMALLOC}
-      Build Test:     ${BUILD_TESTING}
-    Libs:
-      OpenSSL:        ${HAVE_OPENSSL} (LIBS='${OPENSSL_LIBRARIES}')
-      wolfSSL:        ${HAVE_WOLFSSL} (LIBS='${WOLFSSL_LIBRARIES}')
-      Libxml2:        ${HAVE_LIBXML2} (LIBS='${LIBXML2_LIBRARIES}')
-      Libev:          ${HAVE_LIBEV} (LIBS='${LIBEV_LIBRARIES}')
-      Libc-ares:      ${HAVE_LIBCARES} (LIBS='${LIBCARES_LIBRARIES}')
-      Libngtcp2:      ${HAVE_LIBNGTCP2} (LIBS='${LIBNGTCP2_LIBRARIES}')
-      Libngtcp2_crypto_quictls: ${HAVE_LIBNGTCP2_CRYPTO_QUICTLS} (LIBS='${LIBNGTCP2_CRYPTO_QUICTLS_LIBRARIES}')
-      Libngtcp2_crypto_libressl: ${HAVE_LIBNGTCP2_CRYPTO_LIBRESSL} (LIBS='${LIBNGTCP2_CRYPTO_LIBRESSL_LIBRARIES}')
-      Libngtcp2_crypto_wolfssl: ${HAVE_LIBNGTCP2_CRYPTO_WOLFSSL} (LIBS='${LIBNGTCP2_CRYPTO_WOLFSSL_LIBRARIES}')
-      Libnghttp3:     ${HAVE_LIBNGHTTP3} (LIBS='${LIBNGHTTP3_LIBRARIES}')
-      Libbpf:         ${HAVE_LIBBPF} (LIBS='${LIBBPF_LIBRARIES}')
-      Libevent(SSL):  ${HAVE_LIBEVENT_OPENSSL} (LIBS='${LIBEVENT_OPENSSL_LIBRARIES}')
-      Jansson:        ${HAVE_JANSSON} (LIBS='${JANSSON_LIBRARIES}')
-      Jemalloc:       ${HAVE_JEMALLOC} (LIBS='${JEMALLOC_LIBRARIES}')
-      Zlib:           ${HAVE_ZLIB} (LIBS='${ZLIB_LIBRARIES}')
-      Systemd:        ${HAVE_SYSTEMD} (LIBS='${SYSTEMD_LIBRARIES}')
-      Libbrotlienc:   ${HAVE_LIBBROTLIENC} (LIBS='${LIBBROTLIENC_LIBRARIES}')
-      Libbrotlidec:   ${HAVE_LIBBROTLIDEC} (LIBS='${LIBBROTLIDEC_LIBRARIES}')
-    Third-party:
-      http-parser:    ${ENABLE_THIRD_PARTY}
-      MRuby:          ${HAVE_MRUBY}
-      Neverbleed:     ${HAVE_NEVERBLEED}
-    Features:
-      Applications:   ${ENABLE_APP}
-      HPACK tools:    ${ENABLE_HPACK_TOOLS}
-      Examples:       ${ENABLE_EXAMPLES}
-      Threading:      ${ENABLE_THREADS}
-      HTTP/3(EXPERIMENTAL): ${ENABLE_HTTP3}
-")
 if(ENABLE_LIB_ONLY_DISABLED_OTHERS)
   message("Only the library will be built. To build other components "
     "(such as applications and examples), set ENABLE_LIB_ONLY=OFF.")
