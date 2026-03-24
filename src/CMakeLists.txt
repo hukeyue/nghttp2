@@ -173,7 +173,7 @@ if(ENABLE_APP)
     target_link_libraries(nghttpx_static neverbleed)
   endif()
 
-  if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
+  if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND NGHTTP2_BUILD_TESTING)
     set(NGHTTPX_UNITTEST_SOURCES
       shrpx-unittest.cc
       shrpx_tls_test.cc

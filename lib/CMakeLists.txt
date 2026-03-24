@@ -34,7 +34,7 @@ set(NGHTTP2_RES "")
 set(STATIC_LIB "nghttp2_static")
 set(SHARED_LIB "nghttp2")
 
-if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS AND MSVC AND NOT STATIC_LIB_SUFFIX)
+if(NGHTTP2_BUILD_SHARED_LIBS AND NGHTTP2_BUILD_STATIC_LIBS AND MSVC AND NOT STATIC_LIB_SUFFIX)
   set(STATIC_LIB_SUFFIX "_static")
 endif()
 
@@ -74,7 +74,7 @@ install(
 endif()
 
 # Public shared library
-if(BUILD_SHARED_LIBS)
+if(NGHTTP2_BUILD_SHARED_LIBS)
   add_library(${SHARED_LIB} SHARED ${NGHTTP2_SOURCES} ${NGHTTP2_RES})
 
   set_target_properties(${SHARED_LIB} PROPERTIES
@@ -100,7 +100,7 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 # Static library (for unittests because of symbol visibility)
-if(BUILD_STATIC_LIBS)
+if(NGHTTP2_BUILD_STATIC_LIBS)
   add_library(${STATIC_LIB} STATIC ${NGHTTP2_SOURCES})
 
   set_target_properties(${STATIC_LIB} PROPERTIES
@@ -125,7 +125,7 @@ if(BUILD_STATIC_LIBS)
   endif()
 endif()
 
-if(BUILD_SHARED_LIBS)
+if(NGHTTP2_BUILD_SHARED_LIBS)
   set(LIB_SELECTED ${SHARED_LIB})
 else()
   set(LIB_SELECTED ${STATIC_LIB})
