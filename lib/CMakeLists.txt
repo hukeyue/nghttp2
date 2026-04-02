@@ -131,8 +131,6 @@ else()
   set(LIB_SELECTED ${STATIC_LIB})
 endif()
 
-add_library(nghttp2 ALIAS ${LIB_SELECTED})
-
 if(NOT DISABLE_INSTALL)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libnghttp2.pc"
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
