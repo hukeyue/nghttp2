@@ -55,6 +55,12 @@ extern "C" {
 
 #include <nghttp2/nghttp2ver.h>
 
+#if !defined(CHROMIUM_NGHTTP2_NO_CHROMECONF)
+/* This include does prefixing as below, but with an updated set of names.  Also
+ * sets up export macros in component builds. */
+#include "chromeconf.h"
+#endif
+
 #ifdef NGHTTP2_STATICLIB
 #  define NGHTTP2_EXTERN
 #elif defined(WIN32) ||                                                        \
